@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Temple Run Mini</title>
+
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+  background: linear-gradient(#87CEEB, #ffffff);
+  font-family: Arial, sans-serif;
+}
+
+#game {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#player {
+  position: absolute;
+  bottom: 60px;
+  left: 50px;
+  width: 50px;
+  height: 50px;
+  background: red;
+  border-radius: 10px;
+}
+
+.obstacle {
+  position: absolute;
+  bottom: 60px;
+  right: -50px;
+  width: 40px;
+  height: 40px;
+  background: black;
+}
+
+#ground {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  background: green;
+}
+
+#score {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-size: 20px;
+  color: black;
+}
+
+#gameOver {
+  position: absolute;
+  top: 40%;
+  width: 100%;
+  text-align: center;
+  font-size: 30px;
+  color: red;
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+  <div id="player"></div>
+  <div id="ground"></div>
+  <div id="score">Score: 0</div>
+  <div id="gameOver">Game Over<br>Tap to Restart</div>
+</div>
+
+<script>
+let player = document.getElementById("player");
+let game = document.getElementById("game");
+let scoreDisplay = document.getElementById("score");
+let gameOverText = document.getElementById("gameOver");
+
+let jumping = false;
+let score = 0;
+let speed = 5;
+let gameRunning = true;
+
+function jump() {
+  if (jumping) return;
+  jumping = true;
+  let up = 0;
+  let jumpInterval = setInterval(() => {
+    if (up >= 120) clearInterval(jumpInterval);
+    else {
+      up += 10;
+      player.style.bottom = 60 + up + "px";
+    }
+  }, 20);
+
+  setTimeout(() => {
+    let downInterval = setInterval(() => {
+      if (up <= 0) {
+        clearInterval(downInterval);
+        jumping = false;
+      } else {
+        up -= 10;
+        player.style.bottom = 60 + up + "px";
+      }
+    }, 20);
+  }, 300);
+}
+
+function createObstacle() {
+  if (!gameRunning) return;
+
+  let obstacle = document.createElement("div");
+  obstacle.classList.add("obstacle");
+  game.appendChild(obstacle);
+
+  let obstaclePos = window.innerWidth;
+  let moveInterval = setInterval(() => {
+    if (!gameRunning) clearInterval(moveInterval);
+
+    obstaclePos -= speed;
+    obstacle.style.left = obstaclePos + "px";
+
+    let playerRect = player.getBoundingClientRect();
+    let obstacleRect = obstacle.getBoundingClientRect();
+
+    if (
+      playerRect.right > obstacleRect.left &&
+      playerRect.left < obstacleRect.right &&
+      playerRect.bottom > obstacleRect.top
+    ) {
+      gameOver();
+    }
+
+    if (obstaclePos < -50) {
+      clearInterval(moveInterval);
+      obstacle.remove();
+      score++;
+      speed += 0.2;
+      scoreDisplay.innerText = "Score: " + score;
+    }
+  }, 20);
+
+  setTimeout(createObstacle, 1500 - speed * 20);
+}
+
+function gameOver() {
+  gameRunning = false;
+  gameOverText.style.display = "block";
+}
+
+function restartGame() {
+  location.reload();
+}
+
+document.addEventListener("keydown", function(e) {
+  if (e.code === "Space") jump();
+});
+
+document.addEventListener("touchstart", function() {
+  if (!gameRunning) restartGame();
+  else jump();
+});
+
+createObstacle();
+</script>
+
+</body>
+</html>
